@@ -1,0 +1,19 @@
+stages: [test, gate]
+variables:
+  GIT_DEPTH: "0"
+  NEW_CODE_THRESHOLD: "90"   # demo value; your team sets the real one
+unit-tests:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  rules: [{ if: '$CI_PIPELINE_SOURCE == "merge_request_event"' }]
+  script: [mvn -B verify]
+  artifacts: { paths: [target/site/jacoco/jacoco.xml] }
+new-code-coverage:
+  stage: gate
+  image: python:3.12
+  needs: [unit-tests]
+  rules: [{ if: '$CI_PIPELINE_SOURCE == "merge_request_event"' }]
+  script:
+    - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - pip install diff-cover
+    - diff-cover target/site/jacoco/jacoco.xml --compare-branch=origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME --fail-under=$NEW_CODE_THRESHOLD
