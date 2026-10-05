@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+    environment {
+        NEW_CODE_THRESHOLD = '90'
+    }
+    stages {
+        stage('Build and test') {
+            steps {
+                sh 'mvn -B verify'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('New-code coverage gate') {
+            when {
+                expression { env.CHANGE_TARGET != null }
+            }
+            steps {
+                // Ensure target branch is fetched for diff-cover
+                sh "git fetch --no-tags origin +refs/heads/${CHANGE_TARGET}:refs/remotes/origin/${CHANGE_TARGET}"
+                
+                sh """
+                . /opt/venv/bin/activate
+                diff-cover target/site/jacoco/jacoco.xml \\
+                  --compare-branch=origin/${CHANGE_TARGET} \\
+                  --fail-under=${NEW_CODE_THRESHOLD} \\
+                  --markdown-report diff-cover-report.md
+                """
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'target/site/jacoco/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'diff-cover-report.md', allowEmptyArchive: true
+        }
+    }
+}
