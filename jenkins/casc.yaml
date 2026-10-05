@@ -1,0 +1,58 @@
+jenkins:
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: "github-pat"
+              username: "${GITHUB_USERNAME}"
+              password: "${GITHUB_TOKEN}"
+              description: "GitHub PAT for Jenkins"
+
+jobs:
+  - script: >
+      multibranchPipelineJob('ci-validation-poc') {
+          branchSources {
+              branchSource {
+                  source {
+                      github {
+                          id('github-source')
+                          repoOwner("${GITHUB_OWNER}")
+                          repository("${GITHUB_REPO}")
+                          repositoryUrl("")
+                          configuredByUrl(false)
+                          credentialsId('github-pat')
+                          traits {
+                              gitHubBranchDiscovery {
+                                  strategyId(1)
+                              }
+                              gitHubPullRequestDiscovery {
+                                  strategyId(1)
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          factory {
+              workflowBranchProjectFactory {
+                  scriptPath('Jenkinsfile.pr')
+              }
+          }
+          triggers {
+              periodicFolderTrigger {
+                  interval('1m')
+              }
+          }
+      }

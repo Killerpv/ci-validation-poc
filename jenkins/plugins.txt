@@ -1,0 +1,12 @@
+git
+github
+github-branch-source
+workflow-aggregator
+pipeline-github
+credentials
+credentials-binding
+junit
+configuration-as-code
+job-dsl
+git-forensics
+coverage
