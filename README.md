@@ -19,3 +19,5 @@ Shows the post-commit validation flow with free tools: JUnit 5, JaCoCo and diff-
     diff-cover target/site/jacoco/jacoco.xml --compare-branch=sprint-1 --fail-under=90
 
 Change `NEW_CODE_THRESHOLD` in the workflow to experiment. Bitbucket and Jenkins run the same two commands in their own pipeline syntax.
+
+This is a test change to verify the PR validation pipeline.
